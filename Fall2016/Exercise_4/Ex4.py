@@ -16,7 +16,7 @@ class ModularNetwork(object):
         b = [0.2] * self._NExcitatory + [0.25] * self._NInhibitory
         c = [65] * (self._NExcitatory + self._NInhibitory)
         d = [8] * self._NExcitatory + [2] * self._NInhibitory
-        self._network.setParameters(a, b, c, d)
+        self._network.setParameters(np.asarray(a), np.asarray(b), np.asarray(c), np.asarray(d))
 
     def generateEdges(self):
         # Initialise the adjacency matrix
@@ -69,11 +69,23 @@ class ModularNetwork(object):
                 if self._edges[i][j] != 0:
                     self._weights[i][j] = self._getWeight(i, j)
     
+    def setDelays(self):
+        delays = np.zeros((self._NTotal, self._NTotal), dtype=int)
+        for i in range(self._NTotal):
+            for j in range(self._NTotal):
+                if self.isExcitatory(i) and self.isExcitatory(j):
+                    delays[i][j] = random.randint(1, 20)
+                else:
+                    delays[i][j] = 1
+        self._network.setDelays(delays)
+
+
     def prepare(self):
         self._network = IzNetwork(self._NTotal, 20)
         self.setParameters()
         self.generateEdges()
         self.setWeights()
+        self.setDelays()
         
     def plotA(self):
         for x in range(self._NTotal):
@@ -86,8 +98,11 @@ class ModularNetwork(object):
 def main():
     network = ModularNetwork(8, 800, 200, 0.1)
     network.prepare()
-    network.plotA()
-    print(network._weights.sum())
+    # network.plotA()
+    results = []
+    for i in range(1000):
+        results.append(network._network.update())
+    print(results)
 
 if __name__ == "__main__":
     main()
